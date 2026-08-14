@@ -1,0 +1,61 @@
+def encode(data):
+    n = len(data)
+    r = 0
+
+    while 2**r < n + r + 1:
+        r += 1
+
+    code = ['0'] * (n + r + 1)
+    j = 0
+
+    for i in range(1, n + r + 1):
+        if i & (i - 1):
+            code[i] = data[j]
+            j += 1
+
+    for p in range(r):
+        x = 2**p
+        parity = 0
+        for i in range(1, n + r + 1):
+            if i & x:
+                parity ^= int(code[i])
+        code[x] = str(parity)
+
+    return ''.join(code[1:])
+
+
+def decode(code):
+    code = ['0'] + list(code)
+    error = 0
+
+    for p in range(4):
+        x = 2**p
+        parity = 0
+        for i in range(1, len(code)):
+            if i & x:
+                parity ^= int(code[i])
+        if parity:
+            error += x
+
+    if error == 0:
+        print("No error detected")
+    else:
+        print("Error at position:", error)
+        code[error] = '1' if code[error] == '0' else '0'
+        print("Corrected code:", ''.join(code[1:]))
+
+    data = ''
+    for i in range(1, len(code)):
+        if i & (i - 1):
+            data += code[i]
+
+    print("Original data:", data)
+
+
+data = input("Enter data: ")
+
+code = encode(data)
+print("Transmitter codeword:", code)
+
+received = input("Enter received codeword: ")
+decode(received)
