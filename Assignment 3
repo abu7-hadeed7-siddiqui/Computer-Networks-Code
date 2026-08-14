@@ -1,0 +1,149 @@
+def getIpClass(firstOctet):
+    if firstOctet >= 0 and firstOctet <= 127:
+        return 'A'
+    elif firstOctet >= 128 and firstOctet <= 191:
+        return 'B'
+    elif firstOctet >= 192 and firstOctet <= 223:
+        return 'C'
+    elif firstOctet >= 224 and firstOctet <= 239:
+        return 'D'
+    elif firstOctet >= 240 and firstOctet <= 255:
+        return 'E'
+    else:
+        return 'X'
+
+def getDefaultSubnetMask(ipClass):
+    if ipClass == 'A':
+        return "255.0.0.0"
+    elif ipClass == 'B':
+        return "255.255.0.0"
+    elif ipClass == 'C':
+        return "255.255.255.0"
+    else:
+        return "N/A"
+
+def getNumberOfNetworks(ipClass):
+    if ipClass == 'A':
+        return "2^7 (128 possible networks, 126 usable)"
+    elif ipClass == 'B':
+        return "2^14 (16,384 possible networks)"
+    elif ipClass == 'C':
+        return "2^21 (2,097,152 possible networks)"
+    else:
+        return "N/A"
+
+def getUsableHosts(ipClass):
+    if ipClass == 'A':
+        return (1 << 24) - 2
+    elif ipClass == 'B':
+        return (1 << 16) - 2
+    elif ipClass == 'C':
+        return (1 << 8) - 2
+    else:
+        return 0
+
+ip = input("Enter an IP address (format: x.x.x.x): ")
+
+try:
+    octets = ip.split('.')
+    octet1 = int(octets[0])
+    octet2 = int(octets[1])
+    octet3 = int(octets[2])
+    octet4 = int(octets[3])
+
+    if (0 <= octet1 <= 255 and
+        0 <= octet2 <= 255 and
+        0 <= octet3 <= 255 and
+        0 <= octet4 <= 255):
+
+        print("\n--- Results ---")
+        print("IP Address       :", ip)
+
+        if octet1 == 127:
+            print("Class            : A (Reserved)")
+            print("Notes            : Loopback address (used for local host testing, e.g., localhost).")
+            print("Starting IP      : 127.0.0.0")
+            print("Last IP          : 127.255.255.255")
+        else:
+            ipClass = getIpClass(octet1)
+            print("Class            :", ipClass)
+
+            if ipClass == 'A' or ipClass == 'B' or ipClass == 'C':
+                print("Subnet Mask      :", getDefaultSubnetMask(ipClass))
+                print("No. of Networks  :", getNumberOfNetworks(ipClass))
+                print("Usable Hosts     :", getUsableHosts(ipClass))
+
+                print("Starting IP      :", end=" ")
+
+                if ipClass == 'A':
+                    print(f"{octet1}.0.0.0")
+                elif ipClass == 'B':
+                    print(f"{octet1}.{octet2}.0.0")
+                elif ipClass == 'C':
+                    print(f"{octet1}.{octet2}.{octet3}.0")
+
+                print("Last IP          :", end=" ")
+
+                if ipClass == 'A':
+                    print(f"{octet1}.255.255.255")
+                elif ipClass == 'B':
+                    print(f"{octet1}.{octet2}.255.255")
+                elif ipClass == 'C':
+                    print(f"{octet1}.{octet2}.{octet3}.255")
+
+            elif ipClass == 'D':
+                print("Notes            : Multicast address (No standard subnet mask, networks, or hosts)")
+            elif ipClass == 'E':
+                print("Notes            : Experimental address (No standard subnet mask, networks, or hosts)")
+    else:
+        print("Invalid IP address format or octets out of bounds (0-255).")
+
+except:
+    print("Invalid input.")
+
+---------Code2--------
+import math
+
+o1, o2, o3, o4 = 0, 0, 0, 0
+dot = ''
+cidr = 0
+
+ip = input("Enter base IP address (e.g., 192.168.10.0): ")
+o1, o2, o3, o4 = map(int, ip.split('.'))
+
+cidr = int(input("Enter CIDR prefix (e.g., 26 for /26): "))
+
+if cidr < 24 or cidr > 30:
+    print("Error: This program currently supports Class C subnetting (CIDR 24 to 30).")
+    exit(1)
+
+hostBits = 32 - cidr
+blockSize = int(math.pow(2, hostBits))
+numSubnets = 256 // blockSize
+usableHosts = blockSize - 2
+lastOctetMask = 256 - blockSize
+
+print("\n--- General Subnet Information ---")
+print("Calculated Subnet Mask : 255.255.255." + str(lastOctetMask))
+print("Total Usable Hosts     :", usableHosts, "per subnet")
+print("Total Subnets Created  :", numSubnets)
+print()
+
+for i in range(numSubnets):
+    network = i * blockSize
+    firstHost = network + 1
+    lastHost = network + usableHosts
+    broadcast = network + blockSize - 1
+
+    print("=========================================")
+    print("Subnet", i + 1)
+    print("=========================================")
+    print("Network Address   :", o1, ".", o2, ".", o3, ".", network, sep="")
+    print("First Host        :", o1, ".", o2, ".", o3, ".", firstHost, sep="")
+    print("Last Host         :", o1, ".", o2, ".", o3, ".", lastHost, sep="")
+    print("Broadcast Address :", o1, ".", o2, ".", o3, ".", broadcast, sep="")
+
+    print("\nUsable IP Addresses:")
+    for j in range(firstHost, lastHost + 1):
+        print("  ", o1, ".", o2, ".", o3, ".", j, sep="")
+    print()
