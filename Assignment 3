@@ -102,6 +102,8 @@ except:
     print("Invalid input.")
 
 ---------Code2--------
+-----THIS IS CODE 2-----
+
 import math
 
 o1, o2, o3, o4 = 0, 0, 0, 0
