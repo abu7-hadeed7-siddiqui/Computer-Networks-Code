@@ -1,0 +1,63 @@
+SERVER
+
+
+import socket
+
+server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+server.bind(('127.0.0.1', 8080))
+
+print("Server is waiting for message...")
+
+while True:
+    data, address = server.recvfrom(1024)
+    message = data.decode()
+
+    if message == "exit":
+        break
+
+    choice, text = message.split("|", 1)
+
+    if choice == "1":
+        result = text[::-1]
+    elif choice == "2":
+        result = text.lower()
+    else:
+        result = "Invalid choice"
+
+    server.sendto(result.encode(), address)
+
+server.close()
+
+
+CLIENT
+
+
+import socket
+
+client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+server = ('127.0.0.1', 8080)
+
+while True:
+    print("\n1. Reverse string")
+    print("2. Uppercase to lowercase")
+    print("3. Exit")
+
+    choice = input("Enter choice: ")
+
+    if choice == "3":
+        client.sendto("exit".encode(), server)
+        break
+
+    if choice not in ["1", "2"]:
+        print("Invalid choice")
+        continue
+
+    text = input("Enter string: ")
+    message = choice + "|" + text
+
+    client.sendto(message.encode(), server)
+    data, _ = client.recvfrom(1024)
+
+    print("Result:", data.decode())
+
+client.close()
