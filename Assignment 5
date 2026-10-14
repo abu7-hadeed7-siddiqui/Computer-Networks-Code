@@ -1,60 +1,49 @@
 SERVER
 
 
+
 import socket
 
-def calculate(expr):
-    parts = expr.split()
+server = socket.socket()
+server.bind(('127.0.0.1', 8080))
+server.listen(1)
 
-    if len(parts) != 3:
-        return "Error: Invalid format"
-
-    try:
-        a = float(parts[0])
-        op = parts[1]
-        b = float(parts[2])
-
-        if op == '+':
-            result = a + b
-        elif op == '-':
-            result = a - b
-        elif op == '*':
-            result = a * b
-        elif op == '/':
-            if b == 0:
-                return "Error: Division by zero"
-            result = a / b
-        else:
-            return "Error: Invalid operator"
-
-        return f"Result: {result:.2f}"
-
-    except ValueError:
-        return "Error: Invalid number format"
-
-
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind(('0.0.0.0', 8080))
-server.listen(3)
-
-print("Server is listening...")
-
+print("Server is waiting for client...")
 client, address = server.accept()
-print("Connected to:", address)
+print("Client connected!")
 
 while True:
-    data = client.recv(1024).decode().strip()
+    message = client.recv(1024).decode()
 
-    if not data:
+    if not message or message == "exit":
         break
 
-    print("Received:", data)
+    choice, data = message.split("|", 1)
 
-    if data == "exit":
-        break
+    if choice == "1":
+        result = data
+    elif choice == "2":
+        try:
+            a, op, b = data.split()
+            a, b = float(a), float(b)
 
-    result = calculate(data)
-    print(result)
+            if op == '+':
+                result = str(a + b)
+            elif op == '-':
+                result = str(a - b)
+            elif op == '*':
+                result = str(a * b)
+            elif op == '/' and b != 0:
+                result = str(a / b)
+            elif op == '/':
+                result = "Division by zero"
+            else:
+                result = "Invalid operator"
+        except ValueError:
+            result = "Invalid expression"
+    else:
+        result = "Invalid choice"
+
     client.send(result.encode())
 
 client.close()
@@ -65,33 +54,35 @@ server.close()
 CLIENT
 
 
+
 import socket
 
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client = socket.socket()
 
-try:
-    client.connect(('127.0.0.1', 8080))
-except ConnectionRefusedError:
-    print("Server is not running")
-    exit()
-
+client.connect(('127.0.0.1', 8080))
 print("Connected to server!")
-print("Enter equation (e.g., 10 + 5)")
-print("Type exit to quit")
 
 while True:
-    equation = input("Enter equation: ")
+    print("\n1. Chat")
+    print("2. Mathematical Operations")
+    print("3. Exit")
 
-    client.send(equation.encode())
+    choice = input("Enter choice: ")
 
-    if equation.strip() == "exit":
+    if choice == "3":
+        client.send("exit".encode())
         break
 
-    result = client.recv(1024).decode()
+    if choice == "1":
+        data = input("Enter message: ")
+    elif choice == "2":
+        data = input("Enter expression (e.g. 10 + 5): ")
+    else:
+        print("Invalid choice")
+        continue
 
-    if not result:
-        break
-
-    print("Server Response:", result)
+    client.send((choice + "|" + data).encode())
+    print("Server Reply:", client.recv(1024).decode())
 
 client.close()
+
