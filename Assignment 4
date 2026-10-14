@@ -1,0 +1,52 @@
+INF = 9999
+
+def main():
+    n = int(input("Enter number of routers: "))
+
+    cost = [[0] * 10 for _ in range(10)]
+    dist = [[0] * 10 for _ in range(10)]
+    nextHop = [[0] * 10 for _ in range(10)]
+
+    print("Enter the cost matrix:")
+    print("Enter 9999 for infinity:")
+
+    for i in range(n):
+        row = list(map(int, input().split()))
+        for j in range(n):
+            cost[i][j] = row[j]
+            dist[i][j] = cost[i][j]
+            if i == j:
+                nextHop[i][j] = i
+            elif cost[i][j] != INF:
+                nextHop[i][j] = j
+            else:
+                nextHop[i][j] = -1
+
+    print("\nInitial Routing Tables:")
+    for i in range(n):
+        print(f"\nRouting Table for Router {i + 1}:")
+        print("Destination\tCost\tNext Hop")
+        for j in range(n):
+            cost_str = "INF" if dist[i][j] == INF else str(dist[i][j])
+            hop_str = "-" if nextHop[i][j] == -1 else str(nextHop[i][j] + 1)
+            print(f"{j + 1}\t\t{cost_str}\t{hop_str}")
+
+    for k in range(n):
+        for i in range(n):
+            for j in range(n):
+                if (dist[i][k] != INF and dist[k][j] != INF and
+                    dist[i][k] + dist[k][j] < dist[i][j]):
+                    dist[i][j] = dist[i][k] + dist[k][j]
+                    nextHop[i][j] = nextHop[i][k]
+
+        print(f"\n\nAfter Step {k + 1}:")
+        for i in range(n):
+            print(f"\nRouting Table for Router {i + 1}:")
+            print("Destination\tCost\tNext Hop")
+            for j in range(n):
+                cost_str = "INF" if dist[i][j] == INF else str(dist[i][j])
+                hop_str = "-" if nextHop[i][j] == -1 else str(nextHop[i][j] + 1)
+                print(f"{j + 1}\t\t{cost_str}\t{hop_str}")
+
+if __name__ == "__main__":
+    main()
